@@ -1,0 +1,14 @@
+# YOLO Model Configuration
+weights_path: "weights/yolov5nu.pt"                    # Path to YOLO weights
+confidence_threshold: 0.5                     # Default confidence threshold for predictions
+
+# MLFlow Tracking Configuration
+tracking_uri: "http://0.0.0.0:8000"    # Use service name within Docker Compose network
+
+# MongoDB Configuration
+database:
+  uri: "mongodb://mongodb:27017"              # MongoDB URI
+  name: "yolo_db"                             # MongoDB database name for YOLO Service
+
+# External Service Configuration (if needed for other services)
+service_url: "http://mlflow-service:8001"     # MLFlow service URL

@@ -1,0 +1,8 @@
+mlflow:
+  tracking_uri: "http://0.0.0.0:8001"          # MLFlow listening address
+  experiment_name: "YOLOv5-Classification"    # Name of the MLFlow experiment
+
+# MongoDB Configuration (Optional, if used)
+database:
+  uri: "mongodb://mongodb:27017"
+  name: "mlflow_db"                           # MongoDB database name for MLFlow Service

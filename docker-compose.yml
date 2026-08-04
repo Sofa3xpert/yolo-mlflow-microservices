@@ -1,0 +1,42 @@
+networks:
+  app-network:
+    driver: bridge
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"       # Expose MongoDB to localhost
+    networks:
+      - app-network
+    volumes:
+      - mongo-data:/data/db # Persistent volume for MongoDB data
+
+  mlflow-service:
+    build:
+      context: ./mlflow-service
+    container_name: mlflow-service
+    ports:
+      - "8001:8001"         # Expose MLFlow service on localhost
+    networks:
+      - app-network
+    depends_on:
+      - yolo-service             # Ensure MongoDB starts before MLFlow Service
+    environment:
+      - MLFLOW_TRACKING_URI=http://0.0.0.0:8001
+    command: ["mlflow", "server", "--host", "0.0.0.0", "--port", "8001"]
+
+  yolo-service:
+    build:
+      context: ./yolo-service
+    container_name: yolo-service
+    ports:
+      - "8000:8000"         # Expose YOLO Service on localhost
+    networks:
+      - app-network
+    environment:
+      - TRACKING_URI=http://mlflow-service:8001  # Set MLFlow tracking URI for YOLO Service
+
+volumes:
+  mongo-data:

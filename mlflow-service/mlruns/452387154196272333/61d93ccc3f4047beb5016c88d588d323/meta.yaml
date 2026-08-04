@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/macbookpro/PycharmProjects/CloudProject/mlflow-service/mlruns/452387154196272333/61d93ccc3f4047beb5016c88d588d323/artifacts
+end_time: 1733184211174
+entry_point_name: ''
+experiment_id: '452387154196272333'
+lifecycle_stage: active
+run_id: 61d93ccc3f4047beb5016c88d588d323
+run_name: illustrious-foal-327
+run_uuid: 61d93ccc3f4047beb5016c88d588d323
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1733184211167
+status: 3
+tags: []
+user_id: macbookpro

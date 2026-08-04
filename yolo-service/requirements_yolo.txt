@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+ultralytics
+pillow
+motor
+pyyaml
+httpx
+mlflow
+python-multipart

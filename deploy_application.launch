@@ -1,0 +1,106 @@
+#!/bin/bash
+
+# Ensure the script stops on the first error -->
+set -e
+
+echo "Starting deployment process for AI SaaS application..."
+
+
+echo "Installing prerequisites: Docker, Kubernetes, Minikube..."
+sudo apt-get update && sudo apt-get install -y \
+    curl \
+    wget \
+    apt-transport-https \
+    ca-certificates \
+    software-properties-common
+
+
+if ! command -v docker &> /dev/null; then
+    echo "Installing Docker..."
+    sudo apt-get remove -y docker docker-engine docker.io containerd runc || true
+    sudo apt-get install -y docker.io
+    sudo systemctl start docker
+    sudo systemctl enable docker
+else
+    echo "Docker already installed."
+fi
+
+# Add current user to Docker group to avoid sudo (you may need to re-login for this to take effect) -->
+if ! group | grep -q "\bdocker\b"; then
+
+
+sudo usermod -aG docker $USER
+
+# Install kubectl -->
+if ! command -v kubectl &> /dev/null; then
+    echo "Installing kubectl..."
+    sudo curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    sudo install kubectl /usr/local/bin/kubectl
+else
+    echo "kubectl already installed."
+fi
+
+# Install Minikube -->
+if ! command -v minikube &> /dev/null; then
+    echo "Installing Minikube..."
+    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+    sudo install minikube-linux-amd64 /usr/local/bin/minikube
+else
+    echo "Minikube already installed."
+fi
+
+# Step 2: Start Minikube  -->
+echo "Starting Minikube..."
+minikube start --cpus=4 --memory=8g --driver=none
+
+# Step 3: Build Docker Images  -->
+echo "Building Docker images for yolo-service and mlflow-service..."
+eval $(minikube -p minikube docker-env) # Point Docker CLI to Minikube's Docker daemon
+
+# Build YOLO Service -->
+docker build -t yolo-service:latest ./yolo-service
+
+#Build MLFlow Service -->
+docker build -t mlflow-service:latest ./mlflow-service
+
+#Step 4: Deploy Kubernetes Resources  -->
+echo "Deploying Kubernetes resources..."
+
+#Apply Namespace -->
+kubectl apply -f ./k8s/namespace.yaml
+
+#Deploy MongoDB -->
+kubectl apply -f ./k8s/mongodb/mongodb-statefulset.yaml
+kubectl apply -f ./k8s/mongodb/mongodb-service.yaml
+
+#Deploy MLFlow Service -->
+kubectl apply -f ./k8s/mlflow/mlflow-deployment.yaml
+kubectl apply -f ./k8s/mlflow/mlflow-service.yaml
+
+# Deploy YOLO Service -->
+kubectl apply -f ./k8s/yolo/yolo-deployment.yaml
+kubectl apply -f ./k8s/yolo/yolo-service.yaml
+
+#Deploy Ingress (Optional) -->
+kubectl apply -f ./k8s/ingress/ingress.yaml || echo "Ingress not configured. Skipping."
+
+#Step 5: Verify Deployment  -->
+echo "Verifying deployment..."
+
+# Wait for all pods to be running -->
+kubectl wait --for=condition=ready pod --all -n ai-saas --timeout=600s
+
+# List all resources -->
+kubectl get all -n ai-saas
+
+#Retrieve Minikube IP for testing -->
+MINIKUBE_IP=$(minikube ip)
+echo "Minikube is running at $MINIKUBE_IP"
+
+# Step 6: Display Service Endpoints  -->
+echo "Application deployed successfully!"
+echo "YOLO Service: http://$MINIKUBE_IP:8000"
+echo "MLFlow Service: http://$MINIKUBE_IP:8001"
+echo "MongoDB is running internally within the Kubernetes cluster."
+
+exit 0
