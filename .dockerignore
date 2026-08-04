@@ -1,0 +1,21 @@
+# Keep build contexts small and reproducible
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.log
+
+# Local experiment tracking output (regenerated at runtime)
+mlflow-service/mlruns/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Docs / meta not needed inside images
+.git/
+.gitignore
+README.md
+docs/
